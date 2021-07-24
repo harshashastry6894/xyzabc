@@ -1,44 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button, Form, Modal } from "semantic-ui-react";
-import axios from "axios";
 
-const CreateCustomers = (props) => {
+const CreateEditCustomer = (props) => {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [canSave, setSave] = useState(false);
-  const { open, toggleCreateModal, createCustomer, fetchCustomers } = props;
-
-  useEffect(() => {
-    if (canSave) {
-      axios
-        .post("/customer/AddOrUpdateCustomer", {
-          name: name,
-          address: address,
-        })
-        .then(({ data }) => {
-          console.log(data);
-          toggleCreateModal(false);
-          fetchCustomers();
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
-  }, [canSave]);
-
+  const { open, toggleModal, header, customerName, customerAddress, updateCustomer } = props;
   const addCustomer = () => {
-    console.log("hgvsdvcsh");
-    setSave(true);
+    updateCustomer(name !== '' ? name : customerName, address !== '' ? address : customerAddress);
+    setName('');
+    setAddress('');
   };
 
   return (
     <Modal open={open}>
-      <Modal.Header>Create Customer</Modal.Header>
+      <Modal.Header>{header}</Modal.Header>
       <Modal.Content>
         <Form>
           <Form.Field>
             <label>Customer Name</label>
             <input
+              value={name !== '' ? name : customerName}
               placeholder="Customer Name"
               onChange={(e) => setName(e.target.value)}
             />
@@ -46,6 +27,7 @@ const CreateCustomers = (props) => {
           <Form.Field>
             <label>Customer Address</label>
             <input
+              value={address !== '' ? address : customerAddress}
               placeholder="Customer Address"
               onChange={(e) => setAddress(e.target.value)}
             />
@@ -53,11 +35,11 @@ const CreateCustomers = (props) => {
         </Form>
       </Modal.Content>
       <Modal.Actions>
-        <Button color="red" onClick={() => toggleCreateModal(false)}>
+        <Button color="red" onClick={toggleModal}>
           Cancel
         </Button>
         <Button
-          disabled={name.length < 1 || address.length < 1}
+          disabled={name.length < 1 && address.length < 1}
           color="green"
           onClick={addCustomer}
         >
@@ -68,4 +50,4 @@ const CreateCustomers = (props) => {
   );
 };
 
-export default CreateCustomers;
+export default CreateEditCustomer;

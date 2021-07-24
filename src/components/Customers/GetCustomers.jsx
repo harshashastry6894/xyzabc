@@ -1,135 +1,186 @@
-import React, { Component } from "react";
-import { Button, Table, StatisticValue } from "semantic-ui-react";
+import * as React from "react";
+import { Table, Menu, Icon } from "semantic-ui-react";
+import Button from "@material-ui/core/Button";
 import axios from "axios";
-// import CustomerTable from "./CustomerTable";
-import CreateCustomers from "./CreateCustomers";
-import EditCustomer from "./EditCustomer";
-// import DeleteCustomer from "./DeleteCustomer";
-// import GenCustTable from "./GenCustTable";
-// import GetCustTable from "./GenCustTable";
+import DeleteIcon from "@material-ui/icons/Delete";
+import AddIcon from "@material-ui/icons/Add";
+import EditIcon from "@material-ui/icons/Edit";
+import CreateEditCustomers from "./CreateEditCustomers";
+import DeleteCustomer from "./DeleteCustomer";
+import { green, white } from "@material-ui/core/colors";
 
-export default class GetCustomers extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      customers: [],
-      createOpen: false,
-      editOpen: false,
-      deleteOpen: false,
-    };
-  }
-  componentDidMount() {
-    this.fetchCustomers();
-  }
+const GetCustomers = () => {
+  const [customers, setCustomers] = React.useState([]);
+  const [open, setOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [customerName, setCustomerName] = React.useState("");
+  const [customerAddress, setCustomerAddress] = React.useState("");
+  const [header, setHeader] = React.useState("");
+  const [customerId, setCustomerId] = React.useState();
 
-  toggleCreateModal = (value) => {
-    this.setState({
-      createOpen: value,
-    });
-  };
-
-  toggleEditModal = (value) => {
-    this.setState({
-      editOpen: value,
-    });
-  };
-
-  toggleDeleteModal = (event) => {
-    this.setState({
-      deleteOpen: true,
-    });
-  };
-
-  fetchCustomers = () => {
+  const fetchData = React.useCallback(() => {
     axios
-      .get("/customer/GetCustomers")
+      .get("https://localhost:5001/customer/GetCustomers")
       .then(({ data }) => {
-        console.log(data);
-        this.setState({
-          customers: data,
-        });
+        setCustomers(data);
       })
       .catch((err) => {
         console.log(err);
       });
+  }, []);
+
+  React.useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const createCustomer = () => {
+    setOpen((open) => !open);
+    setCustomerName("");
+    setCustomerId();
+    setCustomerAddress("");
+    setHeader("Create Customer");
   };
 
-  editCustomer = (id, name, address) => {
+  const editCustomer = (id, name, address) => {
+    setOpen((open) => !open);
+    setCustomerName(name);
+    setCustomerAddress(address);
+    setHeader("Edit Customer");
+    setCustomerId(id);
+  };
+
+  const deleteCustomer = (id, name) => {
+    setDeleteOpen((open) => !open);
+    setCustomerName(name);
+    setCustomerId(id);
+  };
+
+  const toggleModal = React.useCallback(() => {
+    setOpen((open) => !open);
+  }, []);
+
+  const updateData = React.useCallback(
+    (name, address) => {
+      setOpen((open) => !open);
+      if (!customerId) {
+        debugger;
+        axios
+          .post("https://localhost:5001/customer/AddCustomer", {
+            id: customerId,
+            name: name,
+            address: address,
+          })
+          .then(() => {
+            console.log();
+            fetchData();
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } else {
+        debugger;
+        axios
+          .put(
+            `https://localhost:5001/customer/UpdateCustomer?Id=${customerId}`,
+            {
+              name: name,
+              address: address,
+            }
+          )
+          .then(() => {
+            fetchData();
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }
+    },
+    [customerId, fetchData]
+  );
+
+  const deleteData = React.useCallback(() => {
+    setDeleteOpen((open) => !open);
     axios
-      .post(`https://localhost:5001/customer/AddotrUpdatestudent/`, {
-        id: id,
-        name: name,
-        address: address,
-      })
-      .then(({ data }) => {
-        console.log(data);
-        this.toggleEditModal(false);
-        this.fetchCustomers();
+      .delete(
+        `https://localhost:5001/customer/DeleteCustomer?customerID=${customerId}`
+      )
+      .then(() => {
+        fetchData();
       })
       .catch((err) => {
         console.log(err);
       });
-  };
+  }, [customerId, fetchData]);
 
-  render() {
-    const { customers } = this.state;
+  return (
+    <>
+      <CreateEditCustomers
+        toggleModal={toggleModal}
+        open={open}
+        header={header}
+        updateCustomer={updateData}
+        customerName={customerName}
+        customerAddress={customerAddress}
+      />
+      <DeleteCustomer
+        toggleModal={() => setDeleteOpen((open) => !open)}
+        open={deleteOpen}
+        deleteCustomer={deleteData}
+        customerName={customerName}
+      />
 
-    return (
-      <div>
-        <CreateCustomers
-          toggleCreateModal={this.toggleCreateModal}
-          fetchCustomers={this.fetchCustomers}
-          open={this.state.createOpen}
-        />
+      <Button
+        onClick={createCustomer}
+        variant="outlined"
+        color="primary"
+        endIcon={<AddIcon />}
+      >
+        Create
+      </Button>
+      <Table celled>
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell>Customer Name</Table.HeaderCell>
+            <Table.HeaderCell>Customer Address</Table.HeaderCell>
+            <Table.HeaderCell>Action</Table.HeaderCell>
+            <Table.HeaderCell>Action</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
 
-        <Button color="blue" onClick={() => this.toggleCreateModal(true)}>
-          Create Customer
-        </Button>
-        <Table celled>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Customer Name</Table.HeaderCell>
-              <Table.HeaderCell>Customer Address</Table.HeaderCell>
-              <Table.HeaderCell>Action</Table.HeaderCell>
-              <Table.HeaderCell>Action</Table.HeaderCell>
+        <Table.Body>
+          {customers.map((customer) => (
+            <Table.Row key={customer.id}>
+              <Table.Cell>{customer.name}</Table.Cell>
+              <Table.Cell>{customer.address}</Table.Cell>
+
+              <Table.Cell>
+                <Button
+                  onClick={() =>
+                    editCustomer(customer.id, customer.name, customer.address)
+                  }
+                  variant="outlined"
+                  style={{ color: green[500] }}
+                  endIcon={<EditIcon />}
+                >
+                  Edit
+                </Button>
+              </Table.Cell>
+              <Table.Cell>
+                <Button
+                  onClick={() => deleteCustomer(customer.id, customer.name)}
+                  variant="outlined"
+                  color="secondary"
+                  endIcon={<DeleteIcon />}
+                >
+                  Delete
+                </Button>
+              </Table.Cell>
             </Table.Row>
-          </Table.Header>
+          ))}
+        </Table.Body>
+      </Table>
+    </>
+  );
+};
 
-          <Table.Body>
-            {customers.map((customer) => (
-              <Table.Row key={customer.id}>
-                <Table.Cell>{customer.name}</Table.Cell>
-                <Table.Cell>{customer.address}</Table.Cell>
-
-                <Table.Cell>
-                  <EditCustomer
-                    toggleEditModal={this.toggleEditModal}
-                    fetchCustomers={this.fetchCustomers}
-                    open={this.state.editOpen}
-                    customerID={customer.id}
-                    customerName={customer.name}
-                    customerAddress={customer.address}
-                  />
-                  <Button
-                    color="blue"
-                    onClick={() => this.toggleEditModal(true)}
-                  >
-                    Edit Customer
-                  </Button>
-                </Table.Cell>
-                <Table.Cell>
-                  <Button
-                    color="yellow"
-                    onClick={(e) => this.toggleDeleteModal(e)}
-                  >
-                    Delete
-                  </Button>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table>
-      </div>
-    );
-  }
-}
+export default GetCustomers;

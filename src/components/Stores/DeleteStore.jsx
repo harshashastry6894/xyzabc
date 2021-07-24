@@ -1,20 +1,20 @@
 import * as React from "react";
 import { Button, Modal } from "semantic-ui-react";
 
-const DeleteCustomer = (props) => {
-    const { open, toggleModal, deleteCustomer, customerName } = props;
+const DeleteStore = (props) => {
+    const { open, toggleModal, deleteStore, storeName } = props;
     return (
         <>
             <Modal size={"tiny"} open={open}>
-                <Modal.Header>Delete Customer</Modal.Header>
+                <Modal.Header>Delete Store</Modal.Header>
                 <Modal.Content>
-                    <p>Are you sure you want to delete <b>{customerName}</b> customer</p>
+                    <p>Are you sure you want to delete <b>{storeName}</b> store</p>
                 </Modal.Content>
                 <Modal.Actions>
                     <Button negative onClick={toggleModal}>
                         No
                     </Button>
-                    <Button positive onClick={deleteCustomer}>
+                    <Button positive onClick={deleteStore}>
                         Yes
                     </Button>
                 </Modal.Actions>
@@ -23,4 +23,4 @@ const DeleteCustomer = (props) => {
     );
 };
 
-export default DeleteCustomer;
+export default DeleteStore;
